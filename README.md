@@ -4,7 +4,7 @@
 A comprehensive risk management solution focused on Value-at-Risk (VaR) calculations and stress testing for investment portfolios, featuring multiple methodologies, stress scenario simulations, and dependency modeling with copulas in an interactive Streamlit dashboard.
 
 ## Table of Contents
-- [About & Motivation](#about--motivation)
+- [About & Motivation](about--motivation)
 - [Features](#features)
 - [Installation](#installation)
 - [Running the Dashboard](#running-the-dashboard)
