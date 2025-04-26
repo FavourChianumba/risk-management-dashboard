@@ -1,0 +1,23 @@
+{
+    "data_retrieval": {
+        "start_date": "2014-01-01",
+        "end_date": "2024-01-01",
+        "lookback_years": 10,
+        "equity_indices": [
+            {"ticker": "SPX", "description": "S&P 500", "weight": 0.6}
+        ],
+        "bond_indices": [
+            {"ticker": "US10YT=RR", "description": "10Y US Treasury", "weight": 0.4}
+        ],
+        "macro_indicators": [
+            {"series_id": "TEDRATE", "description": "TED Spread", "frequency": "D"},
+            {"series_id": "VIXCLS", "description": "VIX", "frequency": "D"},
+            {"series_id": "DFF", "description": "Fed Funds Rate", "frequency": "D"}
+        ]
+    },
+    "data_processing": {
+        "returns_method": "log",
+        "fill_method": "ffill",
+        "outlier_threshold": 3
+    }
+}

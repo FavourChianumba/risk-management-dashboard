@@ -1,0 +1,10 @@
+# Development packages
+# Add to your existing requirements.txt for development
+python-dotenv>=1.0.0
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.10.0
+flake8>=6.0.0
+pylint>=2.15.0
+jupyter>=1.0.0
+jupyterlab>=3.5.0

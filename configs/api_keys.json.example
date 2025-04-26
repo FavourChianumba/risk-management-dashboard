@@ -1,0 +1,10 @@
+{
+    "lseg": {
+        "app_key": "YOUR_LSEG_APP_KEY",
+        "username": "YOUR_LSEG_USERNAME",
+        "password": "YOUR_LSEG_PASSWORD"
+    },
+    "fred": {
+        "api_key": "YOUR_FRED_API_KEY"
+    }
+}

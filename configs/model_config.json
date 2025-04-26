@@ -1,0 +1,38 @@
+{
+    "var_models": {
+        "historical": {
+            "confidence_levels": [0.90, 0.95, 0.99],
+            "default_confidence": 0.95,
+            "lookback_days": 252,
+            "time_horizon": 1
+        },
+        "monte_carlo": {
+            "confidence_levels": [0.95, 0.99],
+            "default_confidence": 0.95,
+            "n_simulations": 10000,
+            "time_horizon": 1,
+            "random_seed": 42
+        },
+        "expected_shortfall": {
+            "confidence_levels": [0.95, 0.99],
+            "default_confidence": 0.95
+        }
+    },
+    "stress_testing": {
+        "historical_scenarios": [
+            {"name": "Global Financial Crisis", "start_date": "2008-09-01", "end_date": "2009-03-31"},
+            {"name": "COVID-19 Crash", "start_date": "2020-02-20", "end_date": "2020-03-23"},
+            {"name": "2022 Rate Hikes", "start_date": "2022-01-01", "end_date": "2022-12-31"}
+        ],
+        "synthetic_scenarios": [
+            {"name": "Severe Rate Hike", "rate_shock": 2.0, "equity_drop": 0.20},
+            {"name": "Stagflation", "rate_shock": 1.5, "equity_drop": 0.15, "inflation_shock": 5.0},
+            {"name": "Liquidity Crisis", "credit_spread_widening": 3.0, "equity_drop": 0.25}
+        ]
+    },
+    "backtesting": {
+        "window_size": 252,
+        "step_size": 1,
+        "significance_level": 0.05
+    }
+}

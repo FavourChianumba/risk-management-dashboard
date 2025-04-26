@@ -1,0 +1,3 @@
+Model,Avg VaR (%),Max VaR (%),Breaches,Breach Rate (%),Expected (%),Breach Ratio,Kupiec p-value,Kupiec Test,Christoffersen p-value,Christoffersen Test,Combined Test,Assessment
+Historical VaR,2.03,3.72,98,5.65,5.0,1.13,0.23,Fail to Reject,0.02,Reject (Clustered Breaches),Reject,Model passes coverage test but fails independence test
+Parametric VaR,2.11,4.13,95,5.47,5.0,1.09,0.37,Fail to Reject,0.01,Reject (Clustered Breaches),Reject,Model passes coverage test but fails independence test
