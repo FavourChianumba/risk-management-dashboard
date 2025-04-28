@@ -9,12 +9,13 @@ import seaborn as sns
 from scipy import stats
 import scipy.stats as scipy_stats
 from datetime import datetime, timedelta
-import os
 from pathlib import Path
 import base64
 from PIL import Image
 import io
 import streamlit.components.v1 as components
+
+
 
 
 # Set page configuration
@@ -201,6 +202,32 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# Add near top of script after imports
+import os
+
+# Debug file paths
+st.sidebar.markdown("### Debug Info")
+with st.sidebar.expander("File Path Debug", expanded=False):
+    # List files in data directory
+    base_dir = Path(__file__).parent
+    data_dir = base_dir / "data"
+    processed_dir = data_dir / "processed"
+    results_dir = data_dir / "results"
+    
+    st.write(f"Base directory: {base_dir}")
+    st.write(f"Data directory exists: {os.path.exists(data_dir)}")
+    st.write(f"Processed directory exists: {os.path.exists(processed_dir)}")
+    
+    # List files if directory exists
+    if os.path.exists(processed_dir):
+        st.write("Files in processed directory:")
+        st.write([f.name for f in processed_dir.glob("*")])
+    
+    if os.path.exists(results_dir):
+        st.write("Files in results directory:")
+        st.write([f.name for f in results_dir.glob("*")])
+
+        
 # Helper functions - enhanced with additional utilities
 def format_currency(value, precision=2):
     """Format value as currency with configurable precision."""
