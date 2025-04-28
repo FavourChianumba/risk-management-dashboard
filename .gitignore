@@ -33,13 +33,6 @@ env/
 configs/api_keys.json
 .env
 
-# Data files (keep directory structure with .gitkeep)
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-data/external/crisis_periods.csv
-
 # Streamlit specific
 .streamlit/secrets.toml
 .streamlit/config.toml
