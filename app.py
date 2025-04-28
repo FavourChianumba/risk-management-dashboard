@@ -200,6 +200,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # Helper functions - enhanced with additional utilities
 def format_currency(value, precision=2):
     """Format value as currency with configurable precision."""
@@ -422,6 +423,16 @@ for dataset, status in data_status.items():
 # Divider
 st.sidebar.markdown("<hr style='margin: 1.5rem 0; opacity: 0.3;'>", unsafe_allow_html=True)
 
+# Initialize default dates at the beginning
+if 'calendar' in locals() and not calendar.empty:
+    max_date = calendar['Date'].max()
+    min_date = calendar['Date'].min()
+    end_date = max_date
+    start_date = max_date - timedelta(days=365) if min_date < max_date - timedelta(days=365) else min_date
+else:
+    start_date = datetime.now() - timedelta(days=365)
+    end_date = datetime.now()
+
 # Date range filter - Enhanced with better defaults and indicators
 st.sidebar.markdown("""
 <h3 style="color: #455a64; font-size: 1.1rem; margin-bottom: 0.75rem;">
@@ -460,6 +471,18 @@ if not calendar.empty:
         filtered_returns = portfolio_returns
 else:
     filtered_returns = portfolio_returns
+
+# Default dates in case the user hasn't selected dates yet
+if 'date_range' in locals() and len(date_range) == 2:
+    start_date, end_date = date_range
+elif not calendar.empty:
+    # Default to last year of data
+    end_date = calendar['Date'].max()
+    start_date = end_date - timedelta(days=365) if calendar['Date'].min() < end_date - timedelta(days=365) else calendar['Date'].min()
+else:
+    # Fallback to today and a year ago
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365)
 
 # Divider
 st.sidebar.markdown("<hr style='margin: 1.5rem 0; opacity: 0.3;'>", unsafe_allow_html=True)
