@@ -1,7 +1,6 @@
-```markdown
 # Risk Management Dashboard
 
-A comprehensive risk management solution focused on Value-at-Risk (VaR) calculations and stress testing for investment portfolios, featuring multiple methodologies, stress scenario simulations, and dependency modeling with copulas in an interactive Streamlit dashboard.
+A comprehensive risk management solution focused on Value-at-Risk (VaR) calculations and stress testing for investment portfolios, featuring multiple methodologies, stress scenario simulations, and dependency modeling with copulas in an interactive Streamlit dashboard. **[Try the live dashboard here](https://my-risk-management-dashboard.streamlit.app/)**.
 
 ## Table of Contents
 - [About & Motivation](#about--motivation)
@@ -60,7 +59,13 @@ python setup_project.py
 
 ## Running the Dashboard
 
-### Data Pipeline
+### Live Demo
+
+**Check out the live dashboard**: [https://my-risk-management-dashboard.streamlit.app/](https://my-risk-management-dashboard.streamlit.app/)
+
+### Local Setup
+
+#### Data Pipeline
 
 ```bash
 # 1. Data Retrieval
@@ -76,14 +81,14 @@ jupyter notebook notebooks/05_stress_testing.ipynb
 jupyter notebook notebooks/06_backtesting.ipynb
 ```
 
-### Launch the Dashboard
+#### Launch the Dashboard
 
 ```bash
 # Start the Streamlit app
 streamlit run app.py
 ```
 
-The dashboard will open in your browser at http://localhost:8501, where you can:
+The local dashboard will open in your browser at http://localhost:8501, where you can:
 - Select date ranges and confidence levels
 - Compare different VaR methodologies
 - Analyze stress test scenarios
@@ -153,4 +158,3 @@ This project provided deep insights into:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-```
