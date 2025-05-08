@@ -422,13 +422,6 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Try to load logo, fallback to a placeholder if not available
-logo_base64 = get_base64_image("logo.png")
-st.sidebar.markdown(f"""
-<div style="text-align: center; margin-bottom: 2rem;">
-    <img src="data:image/png;base64,{logo_base64}" width="180">
-</div>
-""", unsafe_allow_html=True)
 
 # Add data quality indicators
 st.sidebar.markdown("""
@@ -2295,6 +2288,122 @@ with tab3:
             'Extreme': '#b71c1c'
         }
         
+        # Create enhanced risk matrix with quadrant labels and better visuals
+        fig = go.Figure()
+
+        # First add quadrant backgrounds for clearer interpretation
+        # Low Impact, Low Probability (Bottom Left)
+        fig.add_shape(
+            type="rect",
+            x0=0, y0=0,
+            x1=30000, y1=3,
+            fillcolor="rgba(46, 125, 50, 0.1)",  # Light green for low risk
+            line=dict(color="rgba(0,0,0,0)"),
+            layer="below"
+        )
+
+        # Low Impact, High Probability (Top Left)
+        fig.add_shape(
+            type="rect",
+            x0=0, y0=3,
+            x1=30000, y1=6,
+            fillcolor="rgba(245, 124, 0, 0.1)",  # Light orange for medium risk
+            line=dict(color="rgba(0,0,0,0)"),
+            layer="below"
+        )
+
+        # High Impact, Low Probability (Bottom Right)
+        fig.add_shape(
+            type="rect",
+            x0=30000, y0=0,
+            x1=100000, y1=3,
+            fillcolor="rgba(245, 124, 0, 0.1)",  # Light orange for medium risk
+            line=dict(color="rgba(0,0,0,0)"),
+            layer="below"
+        )
+
+        # High Impact, High Probability (Top Right) - Danger zone
+        fig.add_shape(
+            type="rect",
+            x0=30000, y0=3,
+            x1=100000, y1=6,
+            fillcolor="rgba(211, 47, 47, 0.1)",  # Light red for high risk
+            line=dict(color="rgba(0,0,0,0)"),
+            layer="below"
+        )
+
+        # Add quadrant dividing lines
+        fig.add_shape(
+            type="line",
+            x0=30000, y0=0,
+            x1=30000, y1=6,
+            line=dict(color="white", width=2, dash="dash"),
+        )
+
+        fig.add_shape(
+            type="line",
+            x0=0, y0=3,
+            x1=100000, y1=3,
+            line=dict(color="white", width=2, dash="dash"),
+        )
+
+        # Add quadrant labels
+        fig.add_annotation(
+            x=15000, y=1.5,
+            text="Low Risk Zone",
+            showarrow=False,
+            font=dict(color="#2e7d32", size=12, family="Arial"),
+            bgcolor="rgba(255, 255, 255, 0.7)",
+            bordercolor="#2e7d32",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.8
+        )
+
+        fig.add_annotation(
+            x=15000, y=4.5,
+            text="Medium Risk Zone",
+            showarrow=False,
+            font=dict(color="#f57c00", size=12, family="Arial"),
+            bgcolor="rgba(255, 255, 255, 0.7)",
+            bordercolor="#f57c00",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.8
+        )
+
+        fig.add_annotation(
+            x=65000, y=1.5,
+            text="Medium Risk Zone",
+            showarrow=False,
+            font=dict(color="#f57c00", size=12, family="Arial"),
+            bgcolor="rgba(255, 255, 255, 0.7)",
+            bordercolor="#f57c00",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.8
+        )
+
+        fig.add_annotation(
+            x=65000, y=4.5,
+            text="High Risk Zone",
+            showarrow=False,
+            font=dict(color="#d32f2f", size=12, family="Arial"),
+            bgcolor="rgba(255, 255, 255, 0.7)",
+            bordercolor="#d32f2f",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.8
+        )
+
+        # Add risk level color mapping
+        color_map = {
+            'Low': '#2e7d32',      # Green
+            'Medium': '#f57c00',   # Orange
+            'High': '#d32f2f',     # Red
+            'Extreme': '#b71c1c'   # Dark red
+        }
+
         # Add scatter points for each scenario with enhanced styling
         for risk_level in stress_test_results['risk_level'].unique():
             risk_data = stress_test_results[stress_test_results['risk_level'] == risk_level]
@@ -2306,44 +2415,103 @@ with tab3:
                 marker=dict(
                     size=risk_data['var_pct'] * 800,  # Size proportional to VaR percentage
                     color=color_map.get(risk_level, '#78909c'),
-                    line=dict(width=1, color='white'),
-                    opacity=0.8
+                    line=dict(width=2, color='white'),
+                    opacity=0.85
                 ),
                 text=risk_data['scenario'],
                 textposition="top center",
+                textfont=dict(size=11, color='#455a64'),
                 name=f"{risk_level} Risk",
-                hovertemplate='<b>%{text}</b><br>VaR: $%{x:,.0f}<br>Probability: %{customdata}<extra></extra>',
+                hovertemplate='<b>%{text}</b><br>VaR: $%{x:,.0f}<br>VaR %: ' + 
+                            stress_test_results.loc[stress_test_results['scenario'] == '%{text}', 'var_pct'].iloc[0].map('{:.2%}'.format) + 
+                            '<br>Probability: %{customdata}<extra></extra>',
                 customdata=risk_data['probability_label']
             ))
-        
+
+        # Add axis labels with explanatory text
         fig.update_layout(
             title="Risk Matrix: Impact vs. Probability",
-            xaxis_title="Impact (VaR in $)",
-            yaxis_title="Relative Probability",
+            xaxis_title={
+                'text': "Impact (VaR in $)",
+                'font': {'size': 14, 'family': "Arial", 'color': "#455a64"}
+            },
+            yaxis_title={
+                'text': "Relative Probability",
+                'font': {'size': 14, 'family': "Arial", 'color': "#455a64"}
+            },
             xaxis=dict(
                 tickmode='array',
-                tickvals=[10000, 30000, 50000],
-                ticktext=['$10k', '$30k', '$50k']
+                tickvals=[10000, 30000, 50000, 70000, 90000],
+                ticktext=['$10k', '$30k', '$50k', '$70k', '$90k'],
+                gridcolor='rgba(220, 220, 220, 0.5)',
+                zeroline=False
             ),
             yaxis=dict(
                 tickmode='array',
                 tickvals=[1, 2, 3, 4, 5],
-                ticktext=['Very Low', 'Low', 'Medium', 'High', 'Very High']
+                ticktext=['Very Low', 'Low', 'Medium', 'High', 'Very High'],
+                gridcolor='rgba(220, 220, 220, 0.5)',
+                zeroline=False
             ),
-            height=500,
-            margin=dict(l=20, r=20, t=50, b=50),
+            height=550,
+            margin=dict(l=20, r=20, t=60, b=60),
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
-                x=0.01
+                x=0.01,
+                bgcolor="rgba(255, 255, 255, 0.8)",
+                bordercolor="#455a64",
+                borderwidth=1
             ),
             plot_bgcolor='#ffffff',
             paper_bgcolor='#ffffff',
-            font=dict(color='#455a64')
+            font=dict(color='#455a64', family="Arial"),
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Arial"
+            )
         )
-        
+
+        # Add annotation explaining the visualization
+        fig.add_annotation(
+            x=0.02,
+            y=-0.15,
+            xref="paper",
+            yref="paper",
+            text="<b>How to interpret:</b> Larger bubbles represent higher VaR as % of portfolio. Scenarios in the top-right quadrant require immediate attention.",
+            showarrow=False,
+            font=dict(size=11, color="#455a64"),
+            align="left",
+            bgcolor="rgba(245, 245, 245, 0.8)",
+            borderpad=4,
+            bordercolor="#e0e0e0",
+            borderwidth=1
+        )
+
         st.plotly_chart(fig, use_container_width=True)
+
+        # Add interpretive guidance below the chart
+        st.markdown("""
+        <div style="padding: 0.75rem; background-color: #f5f7fa; border-radius: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #1a237e;">
+            <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: #1a237e;">Risk Matrix Interpretation</h4>
+            <p style="margin: 0; font-size: 0.9rem; color: #455a64;">
+                The risk matrix helps prioritize scenarios based on both potential impact (VaR amount) and probability of occurrence:
+            </p>
+            <ul style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.9rem; color: #455a64;">
+                <li><strong>High Risk Zone (top-right):</strong> These scenarios require immediate attention and mitigation strategies</li>
+                <li><strong>Medium Risk Zones:</strong> These scenarios should be monitored closely and have contingency plans</li>
+                <li><strong>Low Risk Zone (bottom-left):</strong> These scenarios represent lower priority risks</li>
+            </ul>
+            <p style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.9rem; color: #455a64;">
+                Bubble size represents the scenario's VaR as a percentage of the portfolio value - larger bubbles indicate higher relative impact.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
         
         # Risk level distribution - enhanced with better visuals
         st.markdown("<h2 class='sub-header'>Risk Level Distribution</h2>", unsafe_allow_html=True)
@@ -3037,6 +3205,14 @@ with tab4:
         
         st.plotly_chart(fig, use_container_width=True)
         
+        # Add this interpretation below the chart
+        st.markdown("""
+        **Breach Rate Interpretation**:
+        - Both models show breach rates (5.65% and 5.47%) slightly above the expected 5.00%
+        - Both are within acceptable bounds (4.00%-6.00%), indicating reasonable model performance
+        - Historical VaR has a slightly higher breach rate than Parametric VaR
+        """)
+
         # Breach clustering analysis - enhanced visualization
         st.markdown("<h2 class='sub-header'>Breach Clustering Analysis</h2>", unsafe_allow_html=True)
         
@@ -3782,6 +3958,79 @@ with tab5:
         with col2:
             # Create enhanced visualization of extreme events
             if not extremes.empty:
+                # First add a time series visualization to show extreme events in context
+                fig_timeline = go.Figure()
+                
+                # Plot all returns as a light background
+                fig_timeline.add_trace(go.Scatter(
+                    x=filtered_returns.index,
+                    y=filtered_returns['Return'],
+                    mode='lines',
+                    name='Daily Returns',
+                    line=dict(color='rgba(40, 53, 147, 0.3)', width=1),
+                    hoverinfo='skip'
+                ))
+                
+                # Add horizontal line at 0
+                fig_timeline.add_shape(
+                    type="line",
+                    x0=filtered_returns.index.min(), y0=0,
+                    x1=filtered_returns.index.max(), y1=0,
+                    line=dict(color="#455a64", width=1, dash="dot"),
+                )
+                
+                # Add horizontal lines at threshold values
+                threshold = mean + extreme_threshold
+                threshold_neg = mean - extreme_threshold
+                
+                fig_timeline.add_shape(
+                    type="line",
+                    x0=filtered_returns.index.min(), y0=threshold,
+                    x1=filtered_returns.index.max(), y1=threshold,
+                    line=dict(color="#2e7d32", width=1, dash="dash"),
+                )
+                
+                fig_timeline.add_shape(
+                    type="line",
+                    x0=filtered_returns.index.min(), y0=threshold_neg,
+                    x1=filtered_returns.index.max(), y1=threshold_neg,
+                    line=dict(color="#d32f2f", width=1, dash="dash"),
+                )
+                
+                # Highlight extreme events with markers
+                for idx, row in extremes.iterrows():
+                    color = "#2e7d32" if row['Type'] == 'Positive' else "#d32f2f"
+                    size = min(abs(20 * (row['Return'] - mean) / std), 25)  # Scale size by how extreme
+                    
+                    fig_timeline.add_trace(go.Scatter(
+                        x=[idx],
+                        y=[row['Return']],
+                        mode='markers',
+                        marker=dict(
+                            color=color,
+                            size=size,
+                            line=dict(width=1, color="white"),
+                            symbol="circle"
+                        ),
+                        name=row['Type'],
+                        hovertemplate='<b>%{x|%Y-%m-%d}</b><br>Return: %{y:.2%}<extra></extra>',
+                        showlegend=False
+                    ))
+                
+                fig_timeline.update_layout(
+                    title="Extreme Events Timeline",
+                    xaxis_title="Date",
+                    yaxis_title="Return",
+                    yaxis=dict(tickformat='.1%'),
+                    height=250,
+                    margin=dict(l=20, r=20, t=50, b=20),
+                    plot_bgcolor='#ffffff',
+                    paper_bgcolor='#ffffff',
+                    font=dict(color='#455a64')
+                )
+                
+                st.plotly_chart(fig_timeline, use_container_width=True)
+
                 # Distribution by type
                 type_counts = extremes['Type'].value_counts().reset_index()
                 type_counts.columns = ['Type', 'Count']
@@ -3792,33 +4041,77 @@ with tab5:
                     'Negative': '#d32f2f'   # Red
                 })
                 
-                # Create a more informative pie chart
-                fig = px.pie(
-                    type_counts,
-                    values='Count',
-                    names='Type',
-                    color='Type',
-                    color_discrete_map={
-                        'Positive': '#2e7d32',
-                        'Negative': '#d32f2f'
-                    },
-                    title="Distribution of Extreme Events"
-                )
+                # Enhance information display - add both pie chart and statistics card
+                col_pie, col_stats = st.columns([1, 1])
                 
-                fig.update_traces(
-                    textposition='inside',
-                    textinfo='percent+value',
-                    marker=dict(line=dict(color='#ffffff', width=2))
-                )
+                with col_pie:
+                    # Create a more informative pie chart
+                    fig_pie = px.pie(
+                        type_counts,
+                        values='Count',
+                        names='Type',
+                        color='Type',
+                        color_discrete_map={
+                            'Positive': '#2e7d32',
+                            'Negative': '#d32f2f'
+                        },
+                        title="Distribution of Extreme Events"
+                    )
+                    
+                    fig_pie.update_traces(
+                        textposition='inside',
+                        textinfo='percent+value',
+                        marker=dict(line=dict(color='#ffffff', width=2))
+                    )
+                    
+                    fig_pie.update_layout(
+                        height=200,
+                        margin=dict(l=10, r=10, t=40, b=10),
+                        plot_bgcolor='#ffffff',
+                        paper_bgcolor='#ffffff'
+                    )
+                    
+                    st.plotly_chart(fig_pie, use_container_width=True)
                 
-                fig.update_layout(
-                    height=300,
-                    margin=dict(l=20, r=20, t=50, b=20),
-                    plot_bgcolor='#ffffff',
-                    paper_bgcolor='#ffffff'
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
+                with col_stats:
+                    # Create a statistics card
+                    st.markdown("""
+                    <div style="background-color: #f5f7fa; padding: 10px; border-radius: 5px; height: 200px;">
+                        <h4 style="margin-top: 0;">Extreme Event Statistics</h4>
+                    """, unsafe_allow_html=True)
+                    
+                    # Calculate statistics about extremes
+                    pos_count = type_counts[type_counts['Type'] == 'Positive']['Count'].sum() if 'Positive' in type_counts['Type'].values else 0
+                    neg_count = type_counts[type_counts['Type'] == 'Negative']['Count'].sum() if 'Negative' in type_counts['Type'].values else 0
+                    total_obs = len(filtered_returns)
+                    expected = 0.0027 * total_obs  # 0.27% is expected in normal distribution
+                    
+                    # Calculate fat-tail ratio (actual vs expected extremes)
+                    fat_tail_ratio = (pos_count + neg_count) / expected if expected > 0 else float('inf')
+                    
+                    # Format statistics text with interpretive guidance
+                    if fat_tail_ratio > 2:
+                        tail_interp = "significantly fatter tails than normal"
+                        tail_color = "#d32f2f"
+                    elif fat_tail_ratio > 1:
+                        tail_interp = "moderately fatter tails than normal"
+                        tail_color = "#f57c00"
+                    elif fat_tail_ratio > 0:
+                        tail_interp = "approximately normal tail behavior"
+                        tail_color = "#2e7d32"
+                    else:
+                        tail_interp = "insufficient data to assess"
+                        tail_color = "#78909c"
+                    
+                    # Add statistics
+                    st.markdown(f"""
+                        <p style="font-size: 0.9rem; margin: 0;">
+                            <strong>Total extremes:</strong> {pos_count + neg_count} ({((pos_count + neg_count) / total_obs) * 100:.2f}% of observations)<br>
+                            <strong>Expected in normal dist.:</strong> {expected:.1f} ({0.27:.2f}% of observations)<br>
+                            <strong>Tail behavior:</strong> <span style="color: {tail_color};">{tail_interp}</span>
+                        </p>
+                        </div>
+                    """, unsafe_allow_html=True)
                 
                 # Extreme events statistics with enhanced visualization
                 negative = extremes[extremes['Type'] == 'Negative']['Return']
@@ -3856,7 +4149,7 @@ with tab5:
                         y=comparison_df['Average'],
                         text=[f"{x:.2%}" for x in comparison_df['Average']],
                         textposition='outside',
-                        marker_color=['#d32f2f', '#2e7d32'],
+                        marker_color=['#d32f2f', '#2e7d32'] if len(comparison_df) > 1 else ['#d32f2f'],
                         name='Average'
                     ))
                     
@@ -3872,7 +4165,7 @@ with tab5:
                         ),
                         mode='markers',
                         marker=dict(
-                            color=['#d32f2f', '#2e7d32'],
+                            color=['#d32f2f', '#2e7d32'] if len(comparison_df) > 1 else ['#d32f2f'],
                             size=10,
                             symbol='diamond'
                         ),
@@ -3880,7 +4173,7 @@ with tab5:
                     ))
                     
                     fig.update_layout(
-                        title="Extreme Event Statistics",
+                        title="Extreme Event Magnitude",
                         yaxis=dict(tickformat='.1%'),
                         height=250,
                         margin=dict(l=20, r=20, t=50, b=20),
@@ -3889,11 +4182,90 @@ with tab5:
                         showlegend=False
                     )
                     
+                    # Add reference for comparison
+                    fig.add_shape(
+                        type="line",
+                        x0=-0.5, y0=mean-3*std,
+                        x1=len(comparison_df)-0.5, y1=mean-3*std,
+                        line=dict(color="#455a64", width=1, dash="dash"),
+                    )
+                    
+                    fig.add_annotation(
+                        x=0,
+                        y=mean-3*std,
+                        text="3σ Threshold",
+                        showarrow=False,
+                        yshift=10,
+                        font=dict(size=10, color="#455a64")
+                    )
+                    
                     st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Add interpretative guidance
+                    most_extreme = extremes.loc[extremes['Return'].idxmin()] if len(negative) > 0 else extremes.loc[extremes['Return'].idxmax()]
+                    extreme_date = most_extreme.name.strftime('%Y-%m-%d') if hasattr(most_extreme.name, 'strftime') else str(most_extreme.name)
+                    extreme_value = most_extreme['Return']
+                    
+                    st.markdown(f"""
+                    <div style="padding: 0.75rem; background-color: #f5f7fa; border-radius: 0.5rem; margin-top: 1rem; border-left: 3px solid #d32f2f;">
+                        <p style="margin: 0; color: #455a64; font-size: 0.9rem;">
+                            <strong>Key Insight:</strong> The most extreme event occurred on {extreme_date} with a return of {extreme_value:.2%},
+                            which is {abs(extreme_value - mean) / std:.1f} standard deviations from the mean.
+                            {'This suggests fat-tailed return behavior that may not be fully captured by normal distribution-based risk models.' if fat_tail_ratio > 1.5 else ''}
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
             else:
                 st.info("No extreme events to analyze in the selected period.")
                 
-                # Add educational content if no extremes
+                # Create a dummy visualization to show what extreme events would look like
+                fig_example = go.Figure()
+                
+                # Create sample data
+                example_dates = pd.date_range(start=filtered_returns.index.min(), end=filtered_returns.index.max(), periods=100)
+                example_returns = np.random.normal(0.0005, 0.01, 100)
+                # Add fake extremes
+                example_returns[30] = -0.037
+                example_returns[70] = 0.035
+                
+                # Plot sample returns
+                fig_example.add_trace(go.Scatter(
+                    x=example_dates,
+                    y=example_returns,
+                    mode='lines',
+                    name='Sample Returns',
+                    line=dict(color='rgba(40, 53, 147, 0.3)', width=1)
+                ))
+                
+                # Add example extreme points
+                fig_example.add_trace(go.Scatter(
+                    x=[example_dates[30]],
+                    y=[example_returns[30]],
+                    mode='markers',
+                    marker=dict(color='#d32f2f', size=15),
+                    name='Example Negative Extreme'
+                ))
+                
+                fig_example.add_trace(go.Scatter(
+                    x=[example_dates[70]],
+                    y=[example_returns[70]],
+                    mode='markers',
+                    marker=dict(color='#2e7d32', size=15),
+                    name='Example Positive Extreme'
+                ))
+                
+                fig_example.update_layout(
+                    title="Example: What Extreme Events Would Look Like",
+                    xaxis_title="Date",
+                    yaxis_title="Return",
+                    yaxis=dict(tickformat='.1%'),
+                    height=250,
+                    margin=dict(l=20, r=20, t=50, b=20),
+                )
+                
+                st.plotly_chart(fig_example, use_container_width=True)
+                
+                # Add educational content about extreme events
                 st.markdown("""
                 ### About Extreme Events
                 
@@ -3908,7 +4280,64 @@ with tab5:
                 - Extreme Value Theory (EVT) can help model tail behavior
                 - Stress testing becomes critical for preparedness
                 """, unsafe_allow_html=True)
-        
+                
+                # Add sample visualization of normal vs fat-tailed distributions
+                x = np.linspace(-4, 4, 1000)
+                normal_pdf = stats.norm.pdf(x)
+                t_pdf = stats.t.pdf(x, df=3)  # t-distribution with 3 degrees of freedom (fat tails)
+                
+                fig_dist = go.Figure()
+                
+                fig_dist.add_trace(go.Scatter(
+                    x=x, y=normal_pdf,
+                    mode='lines',
+                    name='Normal Distribution',
+                    line=dict(color='#283593', width=2)
+                ))
+                
+                fig_dist.add_trace(go.Scatter(
+                    x=x, y=t_pdf,
+                    mode='lines',
+                    name='Fat-tailed Distribution',
+                    line=dict(color='#d32f2f', width=2)
+                ))
+                
+                # Add shading for tail regions
+                x_left_tail = x[x <= -3]
+                y_normal_left = normal_pdf[x <= -3]
+                y_t_left = t_pdf[x <= -3]
+                
+                x_right_tail = x[x >= 3]
+                y_normal_right = normal_pdf[x >= 3]
+                y_t_right = t_pdf[x >= 3]
+                
+                fig_dist.add_trace(go.Scatter(
+                    x=x_left_tail, y=y_t_left,
+                    fill='tozeroy',
+                    mode='none',
+                    fillcolor='rgba(211, 47, 47, 0.2)',
+                    name='Excess Left Tail Probability'
+                ))
+                
+                fig_dist.add_trace(go.Scatter(
+                    x=x_right_tail, y=y_t_right,
+                    fill='tozeroy',
+                    mode='none',
+                    fillcolor='rgba(211, 47, 47, 0.2)',
+                    name='Excess Right Tail Probability'
+                ))
+                
+                fig_dist.update_layout(
+                    title='Comparison: Normal vs. Fat-tailed Distribution',
+                    xaxis_title='Standard Deviations',
+                    yaxis_title='Probability Density',
+                    height=250,
+                    margin=dict(l=20, r=20, t=50, b=20),
+                    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+                )
+                
+                st.plotly_chart(fig_dist, use_container_width=True)
+
         # Return metrics table - enhanced with better visuals and comparisons
         st.markdown("<h2 class='sub-header'>Return Statistics Summary</h2>", unsafe_allow_html=True)
         
