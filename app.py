@@ -2413,7 +2413,7 @@ with tab3:
                 y=risk_data['probability'],
                 mode='markers+text',
                 marker=dict(
-                    size=risk_data['var_pct'] * 800,  # Size proportional to VaR percentage
+                    size=risk_data['var_pct'].apply(lambda x: min(max(x * 300, 15), 40)),  # Better scaling with min/max limits
                     color=color_map.get(risk_level, '#78909c'),
                     line=dict(width=2, color='white'),
                     opacity=0.85
@@ -2422,10 +2422,10 @@ with tab3:
                 textposition="top center",
                 textfont=dict(size=11, color='#455a64'),
                 name=f"{risk_level} Risk",
-                hovertemplate='<b>%{text}</b><br>VaR: $%{x:,.0f}<br>VaR %: ' + 
-                            stress_test_results.loc[stress_test_results['scenario'] == '%{text}', 'var_pct'].iloc[0].map('{:.2%}'.format) + 
-                            '<br>Probability: %{customdata}<extra></extra>',
-                customdata=risk_data['probability_label']
+                # Here's the fixed code - include var_pct in customdata
+                customdata=np.column_stack((risk_data['probability_label'], risk_data['var_pct'].apply(lambda x: f"{x:.2%}"))),
+                # Updated hovertemplate to use customdata[1] for the var_pct
+                hovertemplate='<b>%{text}</b><br>VaR: $%{x:,.0f}<br>VaR %: %{customdata[1]}<br>Probability: %{customdata[0]}<extra></extra>'
             ))
 
         # Add axis labels with explanatory text
@@ -3955,6 +3955,8 @@ with tab5:
             else:
                 st.info("No extreme events (beyond ±3σ) found in the selected date range.")
         
+       
+
         with col2:
             # Create enhanced visualization of extreme events
             if not extremes.empty:
@@ -4019,14 +4021,20 @@ with tab5:
                 
                 fig_timeline.update_layout(
                     title="Extreme Events Timeline",
-                    xaxis_title="Date",
-                    yaxis_title="Return",
-                    yaxis=dict(tickformat='.1%'),
-                    height=250,
-                    margin=dict(l=20, r=20, t=50, b=20),
+                    xaxis=dict(
+                        title=dict(text="Date", font=dict(size=14)),
+                        rangeslider=dict(visible=True, thickness=0.05),
+                        type='date'
+                    ),
+                    yaxis=dict(
+                        title=dict(text="Return", font=dict(size=14)),
+                        tickformat='.1%'
+                    ),
+                    height=400,  # Increased from 250 to 400
+                    margin=dict(l=30, r=30, t=60, b=40),  # Increased margins
                     plot_bgcolor='#ffffff',
                     paper_bgcolor='#ffffff',
-                    font=dict(color='#455a64')
+                    font=dict(color='#455a64', size=12)  # Increased font size
                 )
                 
                 st.plotly_chart(fig_timeline, use_container_width=True)
@@ -4065,10 +4073,11 @@ with tab5:
                     )
                     
                     fig_pie.update_layout(
-                        height=200,
-                        margin=dict(l=10, r=10, t=40, b=10),
+                        height=250,  # Keep this at 250 as it's less complex
+                        margin=dict(l=20, r=20, t=40, b=20),
                         plot_bgcolor='#ffffff',
-                        paper_bgcolor='#ffffff'
+                        paper_bgcolor='#ffffff',
+                        font=dict(size=12)  # Ensure readable font size
                     )
                     
                     st.plotly_chart(fig_pie, use_container_width=True)
@@ -4076,8 +4085,8 @@ with tab5:
                 with col_stats:
                     # Create a statistics card
                     st.markdown("""
-                    <div style="background-color: #f5f7fa; padding: 10px; border-radius: 5px; height: 200px;">
-                        <h4 style="margin-top: 0;">Extreme Event Statistics</h4>
+                    <div style="background-color: #f5f7fa; padding: 15px; border-radius: 5px; height: 220px;">
+                        <h4 style="margin-top: 0; font-size: 1.1rem;">Extreme Event Statistics</h4>
                     """, unsafe_allow_html=True)
                     
                     # Calculate statistics about extremes
@@ -4103,9 +4112,9 @@ with tab5:
                         tail_interp = "insufficient data to assess"
                         tail_color = "#78909c"
                     
-                    # Add statistics
+                    # Add statistics with larger font
                     st.markdown(f"""
-                        <p style="font-size: 0.9rem; margin: 0;">
+                        <p style="font-size: 1rem; margin: 5px 0;">
                             <strong>Total extremes:</strong> {pos_count + neg_count} ({((pos_count + neg_count) / total_obs) * 100:.2f}% of observations)<br>
                             <strong>Expected in normal dist.:</strong> {expected:.1f} ({0.27:.2f}% of observations)<br>
                             <strong>Tail behavior:</strong> <span style="color: {tail_color};">{tail_interp}</span>
@@ -4150,7 +4159,8 @@ with tab5:
                         text=[f"{x:.2%}" for x in comparison_df['Average']],
                         textposition='outside',
                         marker_color=['#d32f2f', '#2e7d32'] if len(comparison_df) > 1 else ['#d32f2f'],
-                        name='Average'
+                        name='Average',
+                        width=0.5  # Make bars narrower for better visualization
                     ))
                     
                     # Add min/max error bars
@@ -4161,25 +4171,38 @@ with tab5:
                             type='data',
                             symmetric=False,
                             array=comparison_df['Max'] - comparison_df['Average'],
-                            arrayminus=comparison_df['Average'] - comparison_df['Min']
+                            arrayminus=comparison_df['Average'] - comparison_df['Min'],
+                            width=6  # Make error bars more visible
                         ),
                         mode='markers',
                         marker=dict(
                             color=['#d32f2f', '#2e7d32'] if len(comparison_df) > 1 else ['#d32f2f'],
-                            size=10,
+                            size=12,  # Increase marker size
                             symbol='diamond'
                         ),
                         name='Min/Max Range'
                     ))
                     
+                    # FIXED: Proper structure for axis title and font
                     fig.update_layout(
                         title="Extreme Event Magnitude",
-                        yaxis=dict(tickformat='.1%'),
-                        height=250,
-                        margin=dict(l=20, r=20, t=50, b=20),
+                        yaxis=dict(
+                            tickformat='.1%',
+                            title=dict(
+                                text="Return",
+                                font=dict(size=14)
+                            )
+                        ),
+                        xaxis=dict(
+                            title="",  # Remove x-axis title as categories are self-explanatory
+                            tickfont=dict(size=14)  # Larger tick font
+                        ),
+                        height=400,  # Increased from 250 to 400
+                        margin=dict(l=30, r=30, t=60, b=40),  # Increased margins
                         plot_bgcolor='#ffffff',
                         paper_bgcolor='#ffffff',
-                        showlegend=False
+                        showlegend=False,
+                        bargap=0.4  # Increase spacing between bars
                     )
                     
                     # Add reference for comparison
@@ -4187,7 +4210,7 @@ with tab5:
                         type="line",
                         x0=-0.5, y0=mean-3*std,
                         x1=len(comparison_df)-0.5, y1=mean-3*std,
-                        line=dict(color="#455a64", width=1, dash="dash"),
+                        line=dict(color="#455a64", width=1.5, dash="dash"),  # Thicker line
                     )
                     
                     fig.add_annotation(
@@ -4195,8 +4218,8 @@ with tab5:
                         y=mean-3*std,
                         text="3σ Threshold",
                         showarrow=False,
-                        yshift=10,
-                        font=dict(size=10, color="#455a64")
+                        yshift=15,  # Move label further from line
+                        font=dict(size=12, color="#455a64")  # Larger font
                     )
                     
                     st.plotly_chart(fig, use_container_width=True)
@@ -4207,8 +4230,8 @@ with tab5:
                     extreme_value = most_extreme['Return']
                     
                     st.markdown(f"""
-                    <div style="padding: 0.75rem; background-color: #f5f7fa; border-radius: 0.5rem; margin-top: 1rem; border-left: 3px solid #d32f2f;">
-                        <p style="margin: 0; color: #455a64; font-size: 0.9rem;">
+                    <div style="padding: 1rem; background-color: #f5f7fa; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #d32f2f;">
+                        <p style="margin: 0; color: #455a64; font-size: 1rem;">
                             <strong>Key Insight:</strong> The most extreme event occurred on {extreme_date} with a return of {extreme_value:.2%},
                             which is {abs(extreme_value - mean) / std:.1f} standard deviations from the mean.
                             {'This suggests fat-tailed return behavior that may not be fully captured by normal distribution-based risk models.' if fat_tail_ratio > 1.5 else ''}
@@ -4254,13 +4277,25 @@ with tab5:
                     name='Example Positive Extreme'
                 ))
                 
+                # FIXED: Proper structure for axis titles and fonts
                 fig_example.update_layout(
                     title="Example: What Extreme Events Would Look Like",
-                    xaxis_title="Date",
-                    yaxis_title="Return",
-                    yaxis=dict(tickformat='.1%'),
-                    height=250,
-                    margin=dict(l=20, r=20, t=50, b=20),
+                    xaxis=dict(
+                        title=dict(
+                            text="Date",
+                            font=dict(size=14)
+                        )
+                    ),
+                    yaxis=dict(
+                        title=dict(
+                            text="Return",
+                            font=dict(size=14)
+                        ),
+                        tickformat='.1%'
+                    ),
+                    height=400,  # Increased from 250 to 400
+                    margin=dict(l=30, r=30, t=60, b=40),  # Increased margins
+                    font=dict(size=12)
                 )
                 
                 st.plotly_chart(fig_example, use_container_width=True)
@@ -4327,16 +4362,37 @@ with tab5:
                     name='Excess Right Tail Probability'
                 ))
                 
+                # FIXED: Proper structure for axis titles and fonts
                 fig_dist.update_layout(
                     title='Comparison: Normal vs. Fat-tailed Distribution',
-                    xaxis_title='Standard Deviations',
-                    yaxis_title='Probability Density',
-                    height=250,
-                    margin=dict(l=20, r=20, t=50, b=20),
-                    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+                    xaxis=dict(
+                        title=dict(
+                            text='Standard Deviations',
+                            font=dict(size=14)
+                        )
+                    ),
+                    yaxis=dict(
+                        title=dict(
+                            text='Probability Density',
+                            font=dict(size=14)
+                        )
+                    ),
+                    height=400,  # Increased from 250 to 400
+                    margin=dict(l=30, r=30, t=60, b=40),  # Increased margins
+                    legend=dict(
+                        orientation='h', 
+                        yanchor='bottom', 
+                        y=1.02, 
+                        xanchor='right', 
+                        x=1,
+                        font=dict(size=12)
+                    ),
+                    font=dict(size=12)  # Ensure readable font size
                 )
                 
                 st.plotly_chart(fig_dist, use_container_width=True)
+
+
 
         # Return metrics table - enhanced with better visuals and comparisons
         st.markdown("<h2 class='sub-header'>Return Statistics Summary</h2>", unsafe_allow_html=True)
